@@ -1,0 +1,17 @@
+{
+  "name": "smc_curriculum_parser",
+  "version": "1.0.0",
+  "description": "Command line tool that parses SMC website and generates a valid Road-Map data object",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sergey Zakharchenko",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.0.5",
+    "cheerio": "^0.19.0",
+    "minimist": "^1.2.0",
+    "request": "^2.65.0"
+  }
+}
