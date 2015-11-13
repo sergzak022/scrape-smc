@@ -1,21 +1,43 @@
 var cheerio = require('cheerio');
-var helpers = require('./helpers');
+var prereq_parser = require('./prereq-parser');
 
 exports.scrapeSMC = function ( html, parseLines ) {
 	var $ = cheerio.load(html);
 
     var $trs = $('tr');
-	
-    if ( parseLines ) {
-    	$trs = $('tr').slice(0, parseLines);	
+    
+    var subgroups;
+
+    if ( typeof parseLines === 'string' ) {
+        var id = parseLines;
+        $trs = $('tr b:contains(' + id + ')').closest('tr');
+        if (!$trs.length) {
+            throw new Error('Can not find the class you are requesting');
+        }
+
+        subgroups = [getSubgroup($, $trs)];
+    } else {
+
+        if (typeof parseLines === 'number') {
+            $trs = $('tr').slice(0, parseLines);
+        } else {
+            $trs = $('tr');
+        }
+
+        var $a = $trs.find('a[name]'); // this a tags are located in the tr that identifies the beginning of the new class info
+    
+        var $class_start_trs = $a.closest('tr'); // tr that identifies the beginning of the new class info
+        var stopIndexes = getStopIndexes($, $class_start_trs); // stop indexes will tell us where inforamtion about new class starts
+
+        subgroups = createSubgroups($trs, stopIndexes); // subgroups will simplify data extraction
     }
 
-	var $a = $trs.find('a[name]'); // this a tags are located in the tr that identifies the beginning of the new class info
+	/*var $a = $trs.find('a[name]'); // this a tags are located in the tr that identifies the beginning of the new class info
 	
     var $class_start_trs = $a.closest('tr'); // tr that identifies the beginning of the new class info
     var stopIndexes = getStopIndexes($, $class_start_trs); // stop indexes will tell us where inforamtion about new class starts
 
-    var subgroups = createSubgroups($trs, stopIndexes); // subgroups will simplify data extraction
+    var subgroups = createSubgroups($trs, stopIndexes); // subgroups will simplify data extraction*/
 
     var data = [];
 
@@ -44,6 +66,20 @@ function getStopIndexes ($, $class_start_trs) {
 
     return res;
 }
+
+function getSubgroup ($, $start_tr, stopIn) {
+    if (stopIn == null) {
+        stopIn = 300;
+    }
+    var c = 0, $cur = $start_tr, res = [$start_tr];
+    while ( !( $cur = $cur.next() ).has('a[name]').length && c <= stopIn ) {
+        res.push($cur);
+        c++;
+    }
+
+    return res;
+}
+
 /*
 to simplify data extraction the portoins of the html
 are devided into groups. Every group contains information that
@@ -114,7 +150,7 @@ function populateDataObjectFromRowInfo (obj, str) {
         // for now we only store the match at prerequsisite
         // but later will need to add a parser that generate requirements object the same way we currently have them
         obj.prerequisite = match[1].trim();
-        obj.requirements = processPrerequisite(obj.prerequisite);
+        obj.requirements = prereq_parser.parse(obj.prerequisite);
         return;
     }
 
@@ -139,7 +175,7 @@ function populateDataObjectFromRowInfo (obj, str) {
 
     if ( match ) { // matched sections row
         if ( !Array.isArray(obj.sections) ) {
-            obj.sections = [];    
+            obj.sections = [];  
         }
         obj.sections.push({
             id : match[1].trim(),
@@ -149,62 +185,4 @@ function populateDataObjectFromRowInfo (obj, str) {
         });
         return;
     }
-}
-
-function peek (arr) {
-    return arr[arr.length - 1];
-}
-
-var operations = ['or', 'OR', 'and', 'AND'];
-
-function isOperation (word) {
-    return operations.indexOf(word) >= 0;
-}
-// this checks if word contains a number or number and leters after the number
-// field abbreviation and this id word makes a unique string
-// that unique string will probably used as an id
-var re_id = /^\d+[A-z]*?$/;
-function isId (word) {
-    return re_id.test(word);
-}
-
-// returns the abbreviated word of the field.
-// can also be used to check if word represents a field ( isField ). If it doesn't return undefind that means word represents a field
-function getAbbreviation (word) {
-    var idx;
-    if ( ( idx = helpers.fields_abbrv.indexOf(word) ) >= 0 ) {
-        return helpers.fields_abbrv[idx];
-    } else if ( ( idx = helpers.fields.indexOf(word) ) >= 0 ) {
-        return helpers.fieldMap[ helpers.fields[idx] ];
-    }
-}
-
-function processPrerequisite ( str ) {
-    var re_word = /\b\w+\b/g,
-        res = [],
-        match, word, num,
-        lastField, curField;
-    while ( ( match = re_word.exec(str) ) !== null ) { // if match is not null then match[0] is a word
-        word = match[0];
-
-        curField = getAbbreviation(word);
-        if ( word.toLowerCase() === 'none' ) { // if word says 'none' then we return empty array
-            return [];
-        } else if ( isOperation( word ) ) { // if word is opperation, just add it to res
-            res.push(word);
-        } else if ( isOperation( peek(res) ) && isId( word )  ) { 
-            // if last element of res is operation and current word is id then we need to combine current word with lastField that we extracted before
-            // that gives us an id of the class
-            res.push( lastField + ' ' + word );
-        } else if ( lastField && isId( word ) ) {
-            res.push( lastField + ' ' + word );
-        } else if ( isOperation( peek(res) ) && !isId( word ) && !curField ) {
-            res.pop();
-        }
-
-        if ( curField ) {
-            lastField = curField;
-        }
-    }
-    return res;
 }

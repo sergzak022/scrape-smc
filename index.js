@@ -28,6 +28,10 @@ var year = argv.y || argv.year;
 
 var period = argv.p || argv.period;
 
+var id = argv.i || argv.id;
+
+var lines = argv.l || argv.lines;
+
 if (!year || !period) {
     throw new Error('make sure you pass year (ex. -y 2015) and period (ex. -p summer)');
 }
@@ -44,7 +48,7 @@ function processResponse (err, res, html) {
         throw err;
     }
 
-    var data = scrape.scrapeSMC(html, 100);
+    var data = scrape.scrapeSMC(html, lines || id);
 
     pipeToStandardOutput(data);
 }
