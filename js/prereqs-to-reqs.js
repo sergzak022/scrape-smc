@@ -1,10 +1,10 @@
 var string_hash = require('string-hash');
-
+var logical_grouping = require('./logical-grouping');
 /*
 	this module doesn't assume presidence of "and" over "or" or other way around. You strings must have brackets to make logical statements within them clear.
  */
 
-var ex_0 = "CS 60 and CS 80 and ( CS 15 or CS 52 or CS 53A or CS 55 )";
+var ex_0 = "(CS 60 or CS 80) and ( CS 15 or CS 52 or CS 53A or CS 55 )";
 
 var expect = {
     "type": "exactly",
@@ -27,22 +27,43 @@ var expect = {
 };
 
 exports.parse = function(str) {
-    (function recurse ( str ) { // we assume that str must represent a group (not a single element, but at least two elements connected by operator)
-        // first we replace all outer groups in a string with hashes that we can then use to get groups back
-        var str_no_groups = replaceGroupsWithHashes(str);
-        var req = getReqObj(str_no_groups);
-        var group_str;
-
-        req.elements.forEach(function ( element, idx, elements ) {
-            group_str = getGroupFromHash( element );
-            if ( group_str ) {
-                elements[idx] = recurse( group_str );
-            }
-        });
-
-        return req;
-    })(str);
+    return buildReqObjectRecursively(str);
 };
+
+var presidence = {
+    'and' : 0,
+    'or' : 1
+};
+
+// we assume that str must represent a group (not a single element, but at least two elements connected by operator)
+function buildReqObjectRecursively ( str ) {
+    str = str || '';
+
+    // we replace all outer groups in a string with hashes that we can then use to get groups back
+    // we also do that to remove all the brackets because they confuse us
+    var str_no_groups = replaceGroupsWithHashes(str),
+        hasOnlyAnds = hasOnlyAndRels(str_no_groups),
+        hasOnlyOrs = hasOnlyOrRels(str_no_groups);
+
+    if (!hasOnlyAnds && !hasOnlyOrs) {
+        str = logical_grouping.getGroupedString(str_no_groups, presidence); // try to group elements in a string by inserting brackets
+        str_no_groups = replaceGroupsWithHashes(str);
+        hasOnlyAnds = hasOnlyAndRels(str_no_groups);
+        hasOnlyOrs = hasOnlyOrRels(str_no_groups);
+    }
+
+    var req = getReqObj(str_no_groups, hasOnlyAnds, hasOnlyOrs);
+    var group_str;
+
+    req.elements.forEach(function ( element, idx, elements ) {
+        group_str = getGroupFromHash( element );
+        if ( group_str ) {
+            elements[idx] = buildReqObjectRecursively( group_str );
+        }
+    });
+
+    return req;
+}
 
 // making hash space larger because I'm so damn paranoid
 function hashString(str) {
@@ -58,26 +79,24 @@ function getReqObjTmplt () {
     };
 }
 
-function getReqObj(str) {
-    var hasOnlyOrs = hasOnlyOrRels(str),
-        hasOnlyAnds = hasOnlyAndRels(str),
-        elements, req;
+function getReqObj (str, hasOnlyAnds, hasOnlyOrs) {
+    var elements, req;
 
     switch (true) {
-        case (hasOnlyOrs && !hasOnlyAnds):
+        case (hasOnlyOrs && !hasOnlyAnds) :
             req = getReqObjTmplt();
             req.elements = str.split('or').map(function(word){ return word.trim(); });
             req.select = 1;
             break;
-        case (!hasOnlyOrs && hasOnlyAnds):
+        case (!hasOnlyOrs && hasOnlyAnds) :
             req = getReqObjTmplt();
             req.elements = str.split('and').map(function(word){ return word.trim(); });
             req.select = req.elements.length;
             break;
-        case (!hasOnlyOrs && !hasOnlyAnds):
+        case (str === '') :
             req = getReqObjTmplt();
             break;
-        default:
+        default :
             throw new Error('Ambigious string: ' + str + '. User brackets!');
     }
 

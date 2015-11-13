@@ -1,11 +1,13 @@
 var helpers = require('./helpers');
+var prereqs_to_reqs = require('./prereqs-to-reqs');
+var logical_grouping = require('./logical-grouping');
 
 exports.parse = function ( str ) {
     var prereqArray = exractTokens(str);
     prereqArray = replaceCommas(prereqArray);
     prereqArray = fixOperators(prereqArray);
     prereqArray = guessSubgroups(prereqArray); // only pertrains to smc
-    return buildReqs(prereqArray);
+    return prereqs_to_reqs.parse(prereqArray.join(' '));
 };
 
 exports.replaceCommas = replaceCommas;
@@ -16,81 +18,21 @@ function buildReqs (arr) {
     return arr;
 }
 
+// this is presidence of operations that SMC uses
 var presidence = {
     'AND' : 3,
     'OR' : 2,
     'and' : 1,
     'or' : 0
 };
-// this logic should be moved to the separate module it because groups classes according to the way SMC words their prerequisites
-function getBracketGroups ( array ) {
-    var groupsByPresidence = [], p;
-    array.forEach(function ( el, idx, arr ) {
-        if ( isOperator( el ) ) {
-            p = presidence[el];
-            if ( !Array.isArray( groupsByPresidence[p] ) ) {
-                groupsByPresidence[p] = [];
-            }
-            groupsByPresidence[p].push([ arr[idx - 1], arr[idx + 1] ]);
-        }
-    });
-
-    // join groups logic
-    groupsByPresidence.forEach(function ( group ) {
-        var cur, next;
-        for ( var i = 0 ; i < group.length - 1; i++ ) {
-            cur = group[i];
-            next = group[i + 1];
-            if ( cur[1] === next[0] ) { // transitive
-                group.splice(i, 2, [cur[0], next[1]]);
-                i--;
-            } else {
-                return res.push( next );
-            }
-        }
-    });
-    /*
-    This logic will reduce our three dimensional array to two dimensions
-    We start with groups that have higher presidence and add them to the valid_bracket_groups if they pass test
-    then we add groups that have lower presidence and also add them to the valid_bracket_groups if they pass test
-    in order to pass a test, tested group must not have the same first element with any other group's second element in the valid_bracket_groups,
-    and also not have the same second element with any other group's first element in the valid_bracket_groups
-    This way way the result of this logic can be used to group prerequisites 
-     */
-    var res = groupsByPresidence.reduce(function ( valid_bracket_groups, bracket_groups ) {
-        bracket_groups.filter(function ( bracket_group ) {
-            return valid_bracket_groups.every(function ( valid_bracket_group ) {
-                // only bracket_groups that pass this test get added to the valid_bracket_groups array
-                return valid_bracket_group[0] !== bracket_group[1] && valid_bracket_group[1] !== bracket_group[0];
-            });
-        }).forEach(function ( valid_bracket_group ) {
-            valid_bracket_groups.push( valid_bracket_group );
-        });
-
-        return valid_bracket_groups
-    }, []);
-
-    return res;
-}
 
 // this logic should be moved to the separate module because it groups classes according to the way SMC words their prerequisites
 function guessSubgroups ( array ) {
-    var arr = array.slice(),
-    idx,
-    brackets = getBracketGroups( arr );
-    
-    brackets.forEach(function ( group ) {
-        idx = arr.indexOf(group[0]);
-        arr.splice(idx, 0, '(');
-        idx = arr.indexOf(group[1]);
-        arr.splice(idx + 1, 0, ')');
-    });
+    var arr = logical_grouping.getGroupedArray(array, presidence);
 
     // make sure that all operators are in lowercase
     arr = arr.map(function (el) {
-        if ( isOperator(el) ) {
-            return el.toLowerCase();
-        }
+        return isOperator(el) ? el.toLowerCase() : el;
     });
 
     return arr;
