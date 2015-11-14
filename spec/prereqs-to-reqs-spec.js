@@ -120,6 +120,8 @@ describe('prereqs-to-reqs', function() {
         });
     });
 
+	// --------------------------------- not yet implemented ---------------------------------
+
     // -------------------------------- repetitions ------------------------------------------
 
     /*it('should parse "A and A or B" properly', function() {
@@ -170,7 +172,7 @@ describe('prereqs-to-reqs', function() {
         });
     });*/
 
-    // --------------------------------- not yet implemented ---------------------------------
+    // --------------------------------- combinations ---------------------------------
 
     /*it('should parse "( (A and B) or (A and C) or (B and C) )" properly', function() {
         expect(prereqs_to_reqs.parse("( A or B ) or ( C or (D and E) )")).toEqual({

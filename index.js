@@ -1,7 +1,6 @@
 var argv = require('minimist')(process.argv);
 var request = require('request');
-var helpers = require('./js/helpers');
-var scrape = require('./js/scrape');
+var scrape_smc = require('./js/scrape-smc');
 var Readable = require('stream').Readable;
 
 var periodMap = {
@@ -22,7 +21,7 @@ function buildUrl (url, year, period) {
     return url.replace('*', str);
 }
 
-var url = "http://isismc02.smc.edu/isisdoc/web_cat_sched_*.html"
+var url = "http://isismc02.smc.edu/isisdoc/web_cat_sched_*.html";
 
 var year = argv.y || argv.year;
 
@@ -48,7 +47,7 @@ function processResponse (err, res, html) {
         throw err;
     }
 
-    var data = scrape.scrapeSMC(html, lines || id);
+    var data = scrape_smc.scrape(html, lines || id);
 
     pipeToStandardOutput(data);
 }

@@ -55,8 +55,6 @@ function getGroupIndexes ( array , presidence ) {
             if ( cur[1] === next[0] ) { // transitive
                 group.splice(i, 2, [cur[0], next[1]]);
                 i--;
-            } else {
-                return res.push( next );
             }
         }
     });
@@ -97,8 +95,37 @@ function getGroupedArray (array, presidence) {
     return arr;
 }
 
+function splitByWords (str, presidence) {
+    var operations = str.split(' ').filter(function (el) {
+        return presidence[el] != null;
+    });
+
+    function trim (el) {
+        return el.trim();
+    }
+
+    for ( var key in presidence ) {
+        if ( presidence.hasOwnProperty(key) ) {
+            str = str.split( key ).map( trim ).join(' op ');
+        }
+    }
+
+    var arr = str.split(' op ');
+
+    operations.forEach(function (operator, idx) {
+        arr.splice( (2 * idx) + 1, 0, operator);
+    });
+
+    return arr;
+}
+
 function getGroupedString (str, presidence) {
-    var arr = fixArray(str);
+
+    if ( !presidence ) {
+        throw new error('presidence hash must be provided to getGroupedString');
+    }
+
+    var arr = splitByWords(str, presidence);
     return getGroupedArray(arr, presidence).join(' ');
 }
 

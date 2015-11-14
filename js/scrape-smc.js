@@ -1,7 +1,7 @@
 var cheerio = require('cheerio');
-var prereq_parser = require('./prereq-parser');
+var prereq_parser = require('./prereq-parser-smc');
 
-exports.scrapeSMC = function ( html, parseLines ) {
+exports.scrape = function ( html, parseLines ) {
 	var $ = cheerio.load(html);
 
     var $trs = $('tr');
@@ -150,7 +150,11 @@ function populateDataObjectFromRowInfo (obj, str) {
         // for now we only store the match at prerequsisite
         // but later will need to add a parser that generate requirements object the same way we currently have them
         obj.prerequisite = match[1].trim();
-        obj.requirements = prereq_parser.parse(obj.prerequisite);
+        try {
+            obj.requirements = prereq_parser.parse(obj.prerequisite);
+        } catch (e) {
+            console.warn('Error was thrown when tried to parse prerequisite string for ' + obj.id + ' prerequisite string: ' + obj.prerequisite);
+        }
         return;
     }
 
@@ -175,7 +179,7 @@ function populateDataObjectFromRowInfo (obj, str) {
 
     if ( match ) { // matched sections row
         if ( !Array.isArray(obj.sections) ) {
-            obj.sections = [];  
+            obj.sections = [];
         }
         obj.sections.push({
             id : match[1].trim(),

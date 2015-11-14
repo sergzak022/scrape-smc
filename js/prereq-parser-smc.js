@@ -75,26 +75,25 @@ function replaceCommas ( array ) {
         if ( arr[i] === ',' ) {
             switch ( true ) {
                 // if comma is the first or last element of the array then just remove it
-                case ( i === 0 || i === last) : {
+                case ( i === 0 || i === last) :
                     arr.splice(i, 1);
                     break;
-                }
+                
                 // if it there is an operator before or after the comma then remove it
-                case ( isOperation(arr[i - 1]) || isOperation(arr[i + 1]) ) : {
+                case ( isOperation(arr[i - 1]) || isOperation(arr[i + 1]) ) :
                     arr.splice(i, 1);
                     break;
-                }
-                case ( getFirstOperator( arr.slice(0, i), 'left' ) != null ) : {
+                
+                case ( getFirstOperator( arr.slice(0, i), 'left' ) != null ) :
                     arr.splice( i, 1, getFirstOperator( arr.slice(0, i), 'left' ) );
                     break;
-                }
-                case ( getFirstOperator( arr.slice(i, last), 'right' ) != null ) : {
+                
+                case ( getFirstOperator( arr.slice(i, last), 'right' ) != null ) :
                     arr.splice( i, 1, getFirstOperator( arr.slice(i, last), 'right' ) );
                     break;
-                }
-                default : {
+                
+                default :
                     arr.splice(i, 1, defaultOperator);
-                }
             }
         }
     }

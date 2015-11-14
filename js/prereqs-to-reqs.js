@@ -4,28 +4,6 @@ var logical_grouping = require('./logical-grouping');
 	this module doesn't assume presidence of "and" over "or" or other way around. You strings must have brackets to make logical statements within them clear.
  */
 
-var ex_0 = "(CS 60 or CS 80) and ( CS 15 or CS 52 or CS 53A or CS 55 )";
-
-var expect = {
-    "type": "exactly",
-    "aggregateBy": null,
-    "elements": [
-        "CS 60",
-        "CS 80", {
-            "type": "exactly",
-            "aggregateBy": null,
-            "elements": [
-                "CS 15",
-                "CS 52",
-                "CS 53A",
-                "CS 55"
-            ],
-            "select": 1
-        }
-    ],
-    "select": 3
-};
-
 exports.parse = function(str) {
     return buildReqObjectRecursively(str);
 };
@@ -42,17 +20,17 @@ function buildReqObjectRecursively ( str ) {
     // we replace all outer groups in a string with hashes that we can then use to get groups back
     // we also do that to remove all the brackets because they confuse us
     var str_no_groups = replaceGroupsWithHashes(str),
-        hasOnlyAnds = hasOnlyAndRels(str_no_groups),
-        hasOnlyOrs = hasOnlyOrRels(str_no_groups);
+        hasAnds = hasAndRels(str_no_groups),
+        hasOrs = hasOrRels(str_no_groups);
 
-    if (!hasOnlyAnds && !hasOnlyOrs) {
+    if (hasAnds && hasOrs) {
         str = logical_grouping.getGroupedString(str_no_groups, presidence); // try to group elements in a string by inserting brackets
         str_no_groups = replaceGroupsWithHashes(str);
-        hasOnlyAnds = hasOnlyAndRels(str_no_groups);
-        hasOnlyOrs = hasOnlyOrRels(str_no_groups);
+        hasAnds = hasAndRels(str_no_groups);
+        hasOrs = hasOrRels(str_no_groups);
     }
 
-    var req = getReqObj(str_no_groups, hasOnlyAnds, hasOnlyOrs);
+    var req = getReqObj(str_no_groups, hasAnds, hasOrs);
     var group_str;
 
     req.elements.forEach(function ( element, idx, elements ) {
@@ -79,40 +57,41 @@ function getReqObjTmplt () {
     };
 }
 
-function getReqObj (str, hasOnlyAnds, hasOnlyOrs) {
+function getReqObj (str, hasAnds, hasOrs) {
     var elements, req;
 
     switch (true) {
-        case (hasOnlyOrs && !hasOnlyAnds) :
+        case (hasOrs && !hasAnds) :
             req = getReqObjTmplt();
             req.elements = str.split('or').map(function(word){ return word.trim(); });
             req.select = 1;
             break;
-        case (!hasOnlyOrs && hasOnlyAnds) :
+        case (!hasOrs && hasAnds) :
             req = getReqObjTmplt();
             req.elements = str.split('and').map(function(word){ return word.trim(); });
             req.select = req.elements.length;
             break;
-        case (str === '') :
+        case (str === '') : // we assume there are no prerequisites
             req = getReqObjTmplt();
             break;
-        default :
+        case (!hasOrs && !hasAnds) : // if there are no operators we assume that we are only given a single element as a prerequisite
+            req = getReqObjTmplt();
+            req.elements = [str.trim()];
+            req.select = 1;
+            break;
+        default : // we only get here if string has both 'or' and 'and' relationship. In this case the sting is ambigious
             throw new Error('Ambigious string: ' + str + '. User brackets!');
     }
 
     return req;
 }
 
-function hasOnlyOrRels (str) {
-    return str.split(' ').every(function(word) {
-        return !isOperator(word) || word === 'or';
-    });
+function hasOrRels (str) {
+    return str.indexOf(' or ') >= 0;
 }
 
-function hasOnlyAndRels (str) {
-    return str.split(' ').every(function(word) {
-        return !isOperator(word) || word === 'and';
-    });
+function hasAndRels (str) {
+    return str.indexOf(' and ') >= 0;
 }
 
 var operators = ['or', 'and'];
