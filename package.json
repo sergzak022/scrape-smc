@@ -4,7 +4,7 @@
   "description": "Command line tool that parses SMC website and generates a valid Road-Map data object",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jasmine"
   },
   "author": "Sergey Zakharchenko",
   "license": "ISC",
@@ -14,5 +14,8 @@
     "minimist": "^1.2.0",
     "request": "^2.65.0",
     "string-hash": "^1.1.0"
+  },
+  "devDependencies": {
+    "jasmine": "^2.3.2"
   }
 }
