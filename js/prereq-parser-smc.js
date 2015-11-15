@@ -6,6 +6,7 @@ exports.parse = function ( str ) {
     var prereqArray = exractTokens(str);
     prereqArray = replaceCommas(prereqArray);
     prereqArray = fixOperators(prereqArray);
+    prereqArray = removeUnnededGroups(prereqArray);
     prereqArray = guessSubgroups(prereqArray); // only pertrains to smc
     return prereqs_to_reqs.parse(prereqArray.join(' '));
 };
@@ -28,12 +29,20 @@ var presidence = {
 
 // this logic should be moved to the separate module because it groups classes according to the way SMC words their prerequisites
 function guessSubgroups ( array ) {
-    var arr = logical_grouping.getGroupedArray(array, presidence);
-
-    // make sure that all operators are in lowercase
-    arr = arr.map(function (el) {
-        return isOperator(el) ? el.toLowerCase() : el;
-    });
+    var arr;
+    if ( array.indexOf('(') >= 0 ) { // if there are brackets in smc prerequisite string
+        arr = fixSMCGroupingIssues(array);
+        arr = logical_grouping.getGroupedArray(arr, {
+            'or' : 1,
+            'and' : 0
+        });
+    } else {
+        arr = logical_grouping.getGroupedArray(array, presidence);
+        // make sure that all operators are in lowercase
+        arr = arr.map(function (el) {
+            return isOperator(el) ? el.toLowerCase() : el;
+        });
+    }
 
     return arr;
 }
@@ -44,6 +53,52 @@ var operators = ['or', 'OR', 'and', 'AND'];
 
 function isOperator ( word ) {
     return operators.indexOf( word ) >= 0;
+}
+
+/*
+    This is how SMC groups prerequisites Nursing 20 and 20L (or Nursing 19 and Advanced Placement)
+    we can fix it buy moving or out of the bracket
+    we should get something like this: Nursing 20 and 20L or (Nursing 19 and Advanced Placement)
+    later in the code we will run that string through the special grouping algorithm
+    and get something like this: (Nursing 20 and 20L) or (Nursing 19 and Advanced Placement)
+    SMC is very inconsistent with their 'or' and 'and' relationships. Most of the time 'or' gets presidence
+    but in this particular case 'and' takes presidence
+ */
+
+function fixSMCGroupingIssues ( array ) {
+    var arr = array.slice(),
+        last = arr.length - 1,
+        tmp;
+    for ( var i = 0; i < last; i++ ) {
+        if ( arr[i] === '(' && arr[i + 1] === 'or' ) { // switch 'or' and a bracket if 'of' follows the bracket
+            tmp = arr[i];
+            arr[i] = arr[i + 1];
+            arr[i + 1] = tmp;
+        }
+    }
+
+    return arr;
+}
+
+function removeUnnededGroups (array) {
+    var arr = array.slice(),
+        last = arr.length - 2, i;
+
+    for (i = 0; i < last; i++) {
+        if ( arr[i] === '(' && arr[i + 2] === ')' ) {
+            arr.splice(i, 3);
+        }
+    }
+
+    last = arr.length - 1;
+
+    for (i = 0; i < last; i++) {
+        if ( arr[i] === '(' && arr[i + 1] === ')' ) {
+            arr.splice(i, 2);
+        }
+    }
+
+    return arr;
 }
 
 // remove operators if they are the first or the last element of the array

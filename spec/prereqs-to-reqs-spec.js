@@ -120,7 +120,85 @@ describe('prereqs-to-reqs', function() {
         });
     });
 
-	// --------------------------------- not yet implemented ---------------------------------
+    it('should parse "( A or ( B and C or D ) ) or ( A or ( B and C or D ) )" properly', function() {
+        expect(prereqs_to_reqs.parse("( A or ( B and C or D ) ) or ( A or ( B and C or D ) )")).toEqual({
+            "type": "exactly",
+            "aggregateBy": null,
+            "select": 1,
+            "elements": [{
+                "type": "exactly",
+                "aggregateBy": null,
+                "select": 1,
+                "elements": ["A", {
+                    "type": "exactly",
+                    "aggregateBy": null,
+                    "select": 1,
+                    "elements": [{
+                        "type": "exactly",
+                        "aggregateBy": null,
+                        "select": 2,
+                        "elements": ["B", "C"]
+                    }, "D"]
+                }]
+            }, {
+                "type": "exactly",
+                "aggregateBy": null,
+                "select": 1,
+                "elements": ["A", {
+                    "type": "exactly",
+                    "aggregateBy": null,
+                    "select": 1,
+                    "elements": [{
+                        "type": "exactly",
+                        "aggregateBy": null,
+                        "select": 2,
+                        "elements": ["B", "C"]
+                    }, "D"]
+                }]
+            }]
+        });
+    });
+
+    it('should parse "( aa 0 or ( bb 0 and cc 0 or dd 0 ) ) or ( aa 1 or ( bb 1 and cc 1 or dd 1 ) )" properly', function() {
+        expect(prereqs_to_reqs.parse("( aa 0 or ( bb 0 and cc 0 or dd 0 ) ) or ( aa 1 or ( bb 1 and cc 1 or dd 1 ) )")).toEqual({
+            "type": "exactly",
+            "aggregateBy": null,
+            "select": 1,
+            "elements": [{
+                "type": "exactly",
+                "aggregateBy": null,
+                "select": 1,
+                "elements": ["aa 0", {
+                    "type": "exactly",
+                    "aggregateBy": null,
+                    "select": 1,
+                    "elements": [{
+                        "type": "exactly",
+                        "aggregateBy": null,
+                        "select": 2,
+                        "elements": ["bb 0", "cc 0"]
+                    }, "dd 0"]
+                }]
+            }, {
+                "type": "exactly",
+                "aggregateBy": null,
+                "select": 1,
+                "elements": ["aa 1", {
+                    "type": "exactly",
+                    "aggregateBy": null,
+                    "select": 1,
+                    "elements": [{
+                        "type": "exactly",
+                        "aggregateBy": null,
+                        "select": 2,
+                        "elements": ["bb 1", "cc 1"]
+                    }, "dd 1"]
+                }]
+            }]
+        });
+    });
+
+    // --------------------------------- not yet implemented ---------------------------------
 
     // -------------------------------- repetitions ------------------------------------------
 

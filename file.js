@@ -21,7 +21,5 @@ var html = fs.readFileSync(filepath);
 
 var fd = fs.openSync(path.join(__dirname, 'dump.txt'), 'w');
 
-console.log('lets write')
-
 fs.writeSync(fd, JSON.stringify(data, null, ' '));
 fs.closeSync(fd);

@@ -110,7 +110,7 @@ function createSubgroups ($trs, stopIndexes) {
 }
 
 var regMap = {
-    id_name_units : /name="(.+)".*<b>.+,(.+)<\/b>.*<b>(\d) units/,
+    id_name_units : /name="(.+)".*<b>.+,(.+)<\/b>.*<b>(\d+\.?\d*) units/,
     transfer : /Transfer: (UC|CSU),? ?(UC|CSU)?/,
     prerequisite : /Prerequisite: (.*)<\/td>/, // at first we want only extract a string. Later, when we have all the classes, we will process it
     advisory : /Advisory: (.*)<\/td>/,
