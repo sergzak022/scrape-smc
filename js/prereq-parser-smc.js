@@ -11,6 +11,15 @@ exports.parse = function ( str ) {
     return prereqs_to_reqs.parse(prereqArray.join(' '));
 };
 
+exports.gitFixedPrerequisites = function ( str ) {
+    var prereqArray = exractTokens(str);
+    prereqArray = replaceCommas(prereqArray);
+    prereqArray = fixOperators(prereqArray);
+    prereqArray = removeUnnededGroups(prereqArray);
+    prereqArray = guessSubgroups(prereqArray); // only pertrains to smc
+    return prereqArray.join(' ');
+};
+
 exports.replaceCommas = replaceCommas;
 exports.fixOperators = fixOperators;
 exports.guessSubgroups = guessSubgroups;
@@ -168,6 +177,8 @@ function exractTokens ( str ) {
 
         curField = getAbbreviation(word);
 
+        // this logic builds 'part' string that we use to extract statements that tell us how to parse prereq string
+        // ex. we do not parse the class id that follows "eligibility for" string
         if ( !curField && !isOperation( word ) && !isId( word ) ) {
             part += ' ' + word;
             part = part.trim();

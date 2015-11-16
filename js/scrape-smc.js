@@ -110,7 +110,7 @@ function createSubgroups ($trs, stopIndexes) {
 }
 
 var regMap = {
-    id_name_units : /name="(.+)".*<b>.+,(.+)<\/b>.*<b>(\d+\.?\d*) units/,
+    id_name_units : /<b>(.+),(.+)<\/b>.*<b>(\d+\.?\d*) units/, // old match : /name="(.+)".*<b>.+,(.+)<\/b>.*<b>(\d+\.?\d*) units/
     transfer : /Transfer: (UC|CSU),? ?(UC|CSU)?/,
     prerequisite : /Prerequisite: (.*)<\/td>/, // at first we want only extract a string. Later, when we have all the classes, we will process it
     advisory : /Advisory: (.*)<\/td>/,
@@ -126,7 +126,7 @@ function populateDataObjectFromRowInfo (obj, str) {
 
     match = str.match(regMap.id_name_units);
     if ( match ) { // matched id, name, units row
-        obj.id = match[1].replace(/\s/g, '');
+        obj.id = match[1].trim();
         obj.name = match[2].trim();
         obj.units = match[3].trim();
         return;
@@ -150,6 +150,7 @@ function populateDataObjectFromRowInfo (obj, str) {
         // for now we only store the match at prerequsisite
         // but later will need to add a parser that generate requirements object the same way we currently have them
         obj.prerequisite = match[1].trim();
+        obj.prerequisite_fixed = prereq_parser.gitFixedPrerequisites(obj.prerequisite);
         try {
             obj.requirements = prereq_parser.parse(obj.prerequisite);
         } catch (e) {
