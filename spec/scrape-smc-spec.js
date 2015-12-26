@@ -24,7 +24,7 @@ describe('scrape-smc', function() {
             expect(array[0]).toEqual({
                 "id": "CS 83R",
                 "name": "Server-Side Ruby Web Programming",
-                "units": "3",
+                "units": 3,
                 "transfer": [
                     "CSU"
                 ],
@@ -66,7 +66,7 @@ describe('scrape-smc', function() {
             expect(array[0]).toEqual({
                 "id": "MCRBIO 1",
                 "name": "Fundamentals of Microbiology",
-                "units": "5",
+                "units": 5,
                 "transfer": [
                     "UC",
                     "CSU"
@@ -129,7 +129,7 @@ describe('scrape-smc', function() {
             expect(array[0]).toEqual({
                 "id": "ENGL 1",
                 "name": "Reading and Composition 1",
-                "units": "3",
+                "units": 3,
                 "transfer": [
                     "UC",
                     "CSU"
@@ -165,7 +165,7 @@ describe('scrape-smc', function() {
             expect(array[0]).toEqual({
                 "id": "NURSNG 10L",
                 "name": "Nursing Skills Laboratory",
-                "units": "2",
+                "units": 2,
                 "prerequisite": "Admission to Nursing Program:  Anatomy 1, English 1, Microbiology 1, Physiology 3.",
                 "prerequisite_fixed": "ANATMY 1 and ENGL 1 and MCRBIO 1 and PHYS 3",
                 "requirements": {
@@ -212,7 +212,7 @@ describe('scrape-smc', function() {
             expect(array[0]).toEqual({
                 "id": "NURSNG 25",
                 "name": "Psychiatric - Mental Health Nursing",
-                "units": "1.5",
+                "units": 1.5,
                 "prerequisite": "Nursing 20 and 20L (or Nursing 19 and Advanced Placement).",
                 "prerequisite_fixed": "( NURSNG 20 and NURSNG 20L ) or ( NURSNG 19 and placement )",
                 "requirements": {
@@ -255,7 +255,7 @@ describe('scrape-smc', function() {
             expect(array[0]).toEqual({
                 "id": "AHIS 1",
                 "name": "Western Art History I",
-                "units": "3",
+                "units": 3,
                 "transfer": [
                     "UC",
                     "CSU"

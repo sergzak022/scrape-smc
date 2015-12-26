@@ -1,4 +1,4 @@
-exports.fieldMap = {
+exports.fieldToAbbrMap = {
     "Accounting": "ACCTG",
     "Anatomy": "ANATMY",
     "American Sign Language": "ASL",
@@ -52,6 +52,63 @@ exports.fieldMap = {
     "Theater Arts": "TH ART",
     "Women's Studies": "WOM ST"
 };
+
+exports.abbrToFieldMap = {
+    "ACCTG": "Accounting",
+    "ANATMY": "Anatomy",
+    "ASL": "American Sign Language",
+    "ASTRON": "Astronomy",
+    "BIOL": "Biology",
+    "MCRBIO": "Microbiology",
+    "BUS": "Business",
+    "CHEM": "Chemistry",
+    "CHNESE": "Chinese",
+    "CIS": "Computer Applications",
+    "CS": "Computer Science",
+    "COSM": "Cosmetology",
+    "COUNS": "Counseling",
+    "DANCE": "Dance",
+    "ECE": "Early Childhood Education",
+    "ECON": "Economics",
+    "ENGR": "Engineering",
+    "ENGL": "English",
+    "ET": "Entertainment Technology",
+    "ESL": "English for Second Language",
+    "FASHN": "Fashion",
+    "FILM STUDIES": "Film Studies",
+    "FRENCH": "French",
+    "GIS": "Geographic Information Systems",
+    "GEOG": "Geography",
+    "GERMAN": "German",
+    "GR DES": "Graphic Design",
+    "HEBREW": "Hebrew",
+    "HIST": "History",
+    "HUM": "Humanities",
+    "INTARC": "Interior Architectural Design",
+    "ITAL": "Italian",
+    "JAPAN": "Japanese",
+    "JOURN": "Journalism",
+    "KIN PE": "Kinesiology Physical Education",
+    "KOREAN": "Korean",
+    "MATH": "Math",
+    "MEDIA": "Media Studies",
+    "MUSIC": "Music",
+    "NURSNG": "Nursing",
+    "OFTECH": "Office Technology",
+    "PHOTO": "Photography",
+    "PV": "Photovoltaic Systems",
+    "PHYSCS": "Physics",
+    "POL SC": "Political Science",
+    "PSYCH": "Psychology",
+    "PHYS": "Physiology",
+    "REL ST": "Religious Studies",
+    "RES TH": "Respiratory Therapy",
+    "SPAN": "Spanish",
+    "TH ART": "Theater Arts",
+    "WOM ST": "Women's Studies"
+};
+
+
 
 
 exports.fields_abbrv = [

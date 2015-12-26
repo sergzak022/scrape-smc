@@ -1,5 +1,6 @@
 var cheerio = require('cheerio');
 var prereq_parser = require('./prereq-parser-smc');
+var helpers = require('./helpers');
 
 exports.scrape = function ( html, parseLines ) {
 	var $ = cheerio.load(html);
@@ -110,13 +111,29 @@ function createSubgroups ($trs, stopIndexes) {
 }
 
 var regMap = {
-    id_name_units : /<b>(.+),(.+)<\/b>.*<b>(\d+\.?\d*) units/, // old match : /name="(.+)".*<b>.+,(.+)<\/b>.*<b>(\d+\.?\d*) units/
+    id_name_units :  /<b>([^,]+),(.+)<\/b>.*<b>(\d+\.?\d*) units/, // old match /<b>(.+),(.+)<\/b>.*<b>(\d+\.?\d*) units/
     transfer : /Transfer: (UC|CSU),? ?(UC|CSU)?/,
     prerequisite : /Prerequisite: (.*)<\/td>/, // at first we want only extract a string. Later, when we have all the classes, we will process it
     advisory : /Advisory: (.*)<\/td>/,
     description : /<p><address>(.*)<\/address><\/p>/,
     sections : /<td.*>(\d+)<\/td><td>(.*)<\/td><td>(.*)<\/td><td>(.*)<\/td>/ // g1 - section #, g2 - time, g3 - room, g4 - Instructor's name
 };
+
+function getFieldName ( id ) {
+	var re_word = /(\b\w+\b)/g,
+		match, part = '', field;
+	while ((match = re_word.exec(id)) !== null) {
+		match = match[0];
+		if ( part.length ) {
+			part += ' ';
+		}
+		part += match;
+		field = helpers.abbrToFieldMap[part];
+		if ( field ) {
+			return field;
+		}
+	}
+}
 
 /*
 This function tries to extract data from the str parameter ( str represents a single row (tr element) ) and populate obj parameter with extracted data
@@ -127,8 +144,9 @@ function populateDataObjectFromRowInfo (obj, str) {
     match = str.match(regMap.id_name_units);
     if ( match ) { // matched id, name, units row
         obj.id = match[1].trim();
+		obj.field = getFieldName(obj.id);
         obj.name = match[2].trim();
-        obj.units = match[3].trim();
+        obj.units = +match[3].trim();
         return;
     }
 
