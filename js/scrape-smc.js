@@ -1,6 +1,6 @@
-var cheerio = require('cheerio');
-var prereq_parser = require('./prereq-parser-smc');
-var helpers = require('./helpers');
+var cheerio = require('cheerio'),
+	prereq_parser = require('./prereq-parser-smc'),
+	_ = require('underscore');
 
 exports.scrape = function ( html, parseLines ) {
 	var $ = cheerio.load(html);
@@ -8,7 +8,7 @@ exports.scrape = function ( html, parseLines ) {
     var $trs = $('tr');
     
     var subgroups;
-
+	
     if ( typeof parseLines === 'string' ) {
         var id = parseLines;
         $trs = $('tr b:contains(' + id + ')').closest('tr');
@@ -17,6 +17,7 @@ exports.scrape = function ( html, parseLines ) {
         }
 
         subgroups = [getSubgroup($, $trs)];
+		$trs = $('tr');
     } else {
 
         if (typeof parseLines === 'number') {
@@ -32,27 +33,52 @@ exports.scrape = function ( html, parseLines ) {
 
         subgroups = createSubgroups($trs, stopIndexes); // subgroups will simplify data extraction
     }
-
-	/*var $a = $trs.find('a[name]'); // this a tags are located in the tr that identifies the beginning of the new class info
 	
-    var $class_start_trs = $a.closest('tr'); // tr that identifies the beginning of the new class info
-    var stopIndexes = getStopIndexes($, $class_start_trs); // stop indexes will tell us where inforamtion about new class starts
-
-    var subgroups = createSubgroups($trs, stopIndexes); // subgroups will simplify data extraction*/
-
-    var data = [];
+    var data = [],
+		indexToFieldNameMap = getIndexToFieldNameMap($, $trs);
 
     subgroups.forEach(function (group, gIdx) {
-        var $trs_group = $(group);
+        var $trs_group = $(group),
+			$tr;
         data[gIdx] = {};
+		$tr = $trs_group.eq(0); // get index of the first row that describes the class
+		var fieldName = getFieldAtIndex(indexToFieldNameMap, $tr.index()); // get the field name of the class
         for (var i = 0; i < $trs_group.length; i++) {
-            populateDataObjectFromRowInfo(data[gIdx], $trs_group.eq(i).html());
+			$tr = $trs_group.eq(i);
+            populateDataObjectFromRowInfo(data[gIdx], $tr.html(), fieldName );
         }
     });
 
     return data;
 };
 
+
+function getFieldAtIndex (indexToFieldNameMap, findIdx) {
+	var lastFieldName;
+	_.some(indexToFieldNameMap, function(name, fieldIdx){
+		if ( parseInt(fieldIdx) > findIdx) {
+			return true;
+		} else {
+			lastFieldName = name;
+			return false;
+		}
+	});
+	
+	return lastFieldName;
+}
+
+// returns indexes of rows that have field names
+function getIndexToFieldNameMap ($, $trs) {
+	var fieldNameRows = $trs.find('td>h2').closest('tr'),
+		result = {}, $tr;
+		
+		fieldNameRows.each(function(idx, tr){
+			$tr = $(tr);
+			result[$tr.index()] = $tr.text();
+		});
+	
+	return result;
+}
 
 /*
  when we start scanning the class info we need to know were to stop
@@ -111,7 +137,7 @@ function createSubgroups ($trs, stopIndexes) {
 }
 
 var regMap = {
-    id_name_units :  /<b>([^,]+),(.+)<\/b>.*<b>(\d+\.?\d*) units/, // old match /<b>(.+),(.+)<\/b>.*<b>(\d+\.?\d*) units/
+    id_name_units :  /<b>([^,]+),(.+)<\/b>.*<b>(\d+\.?\d*) units?/, // old match /<b>(.+),(.+)<\/b>.*<b>(\d+\.?\d*) units/
     transfer : /Transfer: (UC|CSU),? ?(UC|CSU)?/,
     prerequisite : /Prerequisite: (.*)<\/td>/, // at first we want only extract a string. Later, when we have all the classes, we will process it
     advisory : /Advisory: (.*)<\/td>/,
@@ -119,32 +145,16 @@ var regMap = {
     sections : /<td.*>(\d+)<\/td><td>(.*)<\/td><td>(.*)<\/td><td>(.*)<\/td>/ // g1 - section #, g2 - time, g3 - room, g4 - Instructor's name
 };
 
-function getFieldName ( id ) {
-	var re_word = /(\b\w+\b)/g,
-		match, part = '', field;
-	while ((match = re_word.exec(id)) !== null) {
-		match = match[0];
-		if ( part.length ) {
-			part += ' ';
-		}
-		part += match;
-		field = helpers.abbrToFieldMap[part];
-		if ( field ) {
-			return field;
-		}
-	}
-}
-
 /*
 This function tries to extract data from the str parameter ( str represents a single row (tr element) ) and populate obj parameter with extracted data
  */
-function populateDataObjectFromRowInfo (obj, str) {
+function populateDataObjectFromRowInfo (obj, str, field) {
     var match;
 
     match = str.match(regMap.id_name_units);
     if ( match ) { // matched id, name, units row
         obj.id = match[1].trim();
-		obj.field = getFieldName(obj.id);
+		obj.field = field;
         obj.name = match[2].trim();
         obj.units = +match[3].trim();
         return;
